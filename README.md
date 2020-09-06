@@ -1,2 +1,2 @@
 # cc.learning
-Dùng để học cocos từ dễ đến khó
+Dùng để học cocos creator.
