@@ -1,0 +1,8 @@
+{
+  "name": "creator",
+  "version": "0.0.1",
+  "description": "The package for learning purpose.",
+  "author": "Hallo Patidu",
+  "main": "main.js",
+  "scene-script": "scene.js"
+}
