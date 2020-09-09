@@ -1,4 +1,5 @@
 'use strict';
+
 module.exports = {
     'lock': function (event) {
         var canvas = cc.find ('Canvas');
@@ -10,6 +11,7 @@ module.exports = {
             }; 
             return true 
         })
+
         if (event.reply) {
             event.reply (null);
         }

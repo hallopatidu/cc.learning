@@ -1,0 +1,12 @@
+{
+  "name": "error-speech",
+  "version": "0.0.1",
+  "description": "The package for learning purpose.",
+  "author": "Hallo Patidu",
+  "main": "main.js",
+  "scene-script": "index.js",
+  "dependencies": {
+    "google-translate-api-browser": "^1.1.71",
+    "google-tts-api": "0.0.4"
+  }
+}
