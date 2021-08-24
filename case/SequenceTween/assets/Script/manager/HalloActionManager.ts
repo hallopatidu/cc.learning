@@ -149,7 +149,7 @@ class ActionGroup {
  *  cc.director.setActionManager(nekoActionManager);
  * 
  */
-@ccclass('NagaActionManager')
+@ccclass('HalloActionManager')
 export default class HalloActionManager extends cc.ActionManager {
 
     private _schemas:Array<Array<number>> = [];         // Bảng biểu mẫu chạy theo thứ tự.
