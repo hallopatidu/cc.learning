@@ -13,7 +13,7 @@ cc.Class({
 
     ctor(){
         try{
-            // throw new Error("Cảm ơn đã theo dõi")
+            throw new Error("Cảm ơn đã theo dõi")
             // this.labelss.string = "hello"
         }catch(err){
             cc.error(err)

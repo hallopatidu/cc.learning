@@ -1,0 +1,8 @@
+{
+  "engine": "cocos2d-html5",
+  "packages": "packages",
+  "version": "2.4.6",
+  "name": "SequenceTween",
+  "id": "d4f601d7-4b61-4ce0-a076-0cfa876bc60d",
+  "isNew": false
+}
