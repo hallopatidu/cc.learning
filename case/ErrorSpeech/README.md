@@ -1,2 +1,2 @@
-# hello-world
-Hello world new project template.
+# Đọc lỗi
+Cứ có lỗi bắn ra là đọc và dịch sang tiếng việt.
