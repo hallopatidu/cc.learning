@@ -108,32 +108,21 @@ class ActionGroup {
             this._status = ActionGroup.RUNNING;
             let spawnActions = this._actions.shift();
             this._length--;
+            // 
             if(spawnActions instanceof Array){
-                // Tim ra action co duration lon nhat.
-                spawnActions = (spawnActions as Array<cc.Action>).reduce((maxDurationAction: cc.Action, action:cc.Action, index: number)=>{ 
-                    let _maxDuration:number = 0;                    
-                    let _target:cc.Node = action.getTarget();
-                    if(!maxDurationAction){
-                        maxDurationAction = cc.delayTime(0);
-                        maxDurationAction.setTarget(_target);
-                    }else if(maxDurationAction && !(maxDurationAction instanceof cc.FiniteTimeAction)){
-                        _maxDuration = 0;
-                    }                    
-                    //
-                    if(action instanceof cc.FiniteTimeAction){
-                        let _actionDuration = (action as cc.FiniteTimeAction).getDuration();
-                        if(_actionDuration > _maxDuration){
-                            // Khi tim ra action co duration lớn hơn thì chạy action có duration lớn nhất trước đó.
-                            this._manager.addAction(maxDurationAction, maxDurationAction.getTarget(), false);                            
-                            return action;
-                        }
+                spawnActions = spawnActions.reduce((maxDurationAction: cc.Action, action:cc.Action, index:number)=>{
+                    let _target:cc.Node = maxDurationAction.getTarget() || action.getTarget();
+                    let _maxDuration:number = maxDurationAction && (maxDurationAction instanceof cc.FiniteTimeAction) ? maxDurationAction.getDuration() : 0;
+                    let _targetDuration:number = action && (action instanceof cc.FiniteTimeAction) ? action.getDuration() : 0;
+                    if(_maxDuration < _targetDuration){                        
+                        this._manager.addAction(maxDurationAction, _target, false);
+                        return action;                    
                     }
-                    // cho chạy các action khác //
-                    this._manager.addAction(action, _target, false);
+                    this._manager.addAction(action, action.getTarget(), false);
                     return maxDurationAction;
-                })  // tham số thứ 2 là tạo tạm một action có duration = 0;
-
+                })
             }
+            
             // Tạo sequence callback và packed action.
             let target:cc.Node = (spawnActions as cc.Action).getTarget();
             let packedAction = cc.sequence.apply(this, [spawnActions, cc.callFunc(()=>{
@@ -201,7 +190,6 @@ export default class HalloActionManager extends cc.ActionManager {
         let actionTag = action.getTag();
         // 
         let packedAddress: Array<number> = this._schemas.reduce((accumulator, tags, index) =>{
-            //             
             let pacId: number = index;            
             let tagId: number = tags.findIndex( tag => tag == actionTag );
             if(tagId != -1){
@@ -249,9 +237,9 @@ export default class HalloActionManager extends cc.ActionManager {
                 actionPackage.reset();
             }else{
                 if(actionPackage.length == schema.length && actionPackage.status == ActionGroup.IDLE){    
-                    this._preActions[pacId] = null;              
+                    // this._preActions[pacId] = null;              
                     actionPackage.start();
-                    cc.log("start actions:: " + actionPackage.id + " -name: " + (target ? target.name : "unknow") )
+                    // cc.log("start actions:: " + actionPackage.id + " -name: " + (target ? target.name : "unknow") )
                 }
             }
         })

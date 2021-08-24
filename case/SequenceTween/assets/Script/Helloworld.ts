@@ -20,7 +20,7 @@ export default class Helloworld extends cc.Component {
 
     onLoad(){
         let actionManager:HalloActionManager = new HalloActionManager();
-            actionManager.sequenceSchema([1,2,3]);
+            actionManager.sequenceSchema([1,2]);
             
         cc.director.setActionManager(actionManager);
     }
