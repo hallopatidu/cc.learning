@@ -24,6 +24,37 @@ Mỗi khi một hệ thống/extension nào đó gọi `Editor.Message.request(.
 - **Trích Xuất Vết Gọi Hàm:** Mẹo ở đây là tạo ra đối tượng ảo `new Error("message")`, sau đó match `.stack` của nó để tìm ra chính xác dòng code gốc (source) nào đã thực hiện tác vụ gọi IPC này.
 - **Tạo ID Theo Dõi:** DevTool tự sinh một `ID` để đánh dấu `request` packet này. Sau đó nó lưu gói dữ liệu tracking này (bao gồm payload, timestamp,...) vào một hàng đợi (Queue) nội bộ.
 
+```javascript
+request(e) {
+    var s;
+    // Bỏ qua các tín hiệu nội bộ của chính extension "messages" để khỏi bị lặp vòng lặp vô tận (infinite loop)
+    if ("messages" !== e.name) {
+        
+        // 1. Tạo 1 cái Error ảo để lấy trích xuất call stack (Lấy dấu vết xem ai là kẻ gửi)
+        s = new Error("message").stack.match(/\(.*\\)/g);
+        
+        // 2. Wrap toàn bộ dữ liệu (tên người gửi, lúc mấy giờ, kiểu gửi, payload arguments là gì...)
+        let packet = {
+            process: "renderer",
+            type: "request",
+            name: e.name,        // Tên package nhận
+            message: e.message,  // Tên message
+            source: s[4],        // Lấy trace từ call stack đã truy xuất ở trên
+            timestamp: Date.now(),
+            time: 0,
+            args: e.args,
+            id: id++             // Tự sinh ID để sau này tracking được với gói tin "reply" (phản hồi)
+        };
+        e.id = packet.id;
+        requestQueue.push(packet); // Lưu vào hàng đợi để chờ gói reply
+
+        // 3. Nó gửi chính cái cục thông tin theo dõi này lại cho Window UI Message Devtool của nó để vẽ lên bảng
+        Editor.Message.send("messages", "request", packet);
+    }
+}
+
+```
+
 ## 3. Ghép Cặp Request/Reply Để Tính Toán Thời Gian
 Đối với các sự kiện có phản hồi như `request` -> `reply`:
 1. DevTools lưu gói gửi đi (request) kèm ID và thời gian bắt đầu (timestamp) vào bộ đệm `requestQueue`.
