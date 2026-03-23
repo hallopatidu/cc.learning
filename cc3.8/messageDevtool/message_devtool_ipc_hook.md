@@ -63,3 +63,115 @@ request(e) {
 
 ## 4. Giao Tiếp Với Giao Diện Người Dùng (UI)
 Sau khi đóng gói hoàn chỉnh dữ liệu bao gồm cả Call Stack, Thời gian chờ trễ, Tên gọi..., chính DevTools lại gọi hàm `Editor.Message.send("messages", "request", packet)` để gửi chuỗi dữ liệu tracking này lên màn hình UI của nó đang được render trên giao diện Editor (panel của devtool) để render thành bảng thông số.
+
+
+# BROWSER CCC
+# Phân tích Chức năng File `builtin\messages\dist\browser.ccc`
+
+Dựa vào cấu trúc của extension **messages** (được định nghĩa trong `package.json`) và kiến trúc chung của phần mềm **Cocos Creator**, file `browser.ccc` đóng vai trò là thành phần cốt lõi với các chức năng chính sau:
+
+---
+
+### 1. Điểm neo chính (Main Entry) tại Main Process
+* **Bản chất file:** Đuôi `.ccc` thực chất là mã nguồn JavaScript (`browser.js`) đã được Cocos biên dịch thành dạng **bytecode** (bằng *bytenode V8*) để tối ưu tốc độ nạp và bảo mật mã nguồn lõi.
+* **Vai trò:** Hoạt động dưới dạng tiến trình chính (**Main Process / Backend**) của nền tảng Electron/Node.js để quản lý toàn bộ vòng đời của công cụ **Message Manager** (Trình quản lý giao tiếp thông điệp) trong Editor.
+
+### 2. Bắt, Ghi chép và Quản lý Giao tiếp (IPC Monitoring)
+Trình Editor của Cocos Creator sử dụng hệ thống **IPC (Inter-Process Communication)** để các extension tương tác với nhau thông qua `Editor.Message`. File `browser.ccc` thực hiện nhiệm vụ giám sát hệ thống này:
+
+* **Ghi chép log:** Xử lý các lệnh `start-record` (Bắt đầu ghi hệ thống IPC) và `stop-record` (Dừng ghi) bằng cách gắn các Listener vào lõi phần mềm.
+* **Lưu trữ:** Phụ trách tính năng tự động sao lưu lịch sử thông điệp khi được yêu cầu qua các hook `start-auto-save` và `stop-auto-save`.
+* **Trạng thái:** Sử dụng hàm `queryMessageState` để trả về cho giao diện (UI) trạng thái hiện tại của hệ thống và số lượng message đã ghi nhận.
+
+### 3. Quản lý việc Mở Giao diện (Panels)
+Phần tử này kiểm soát việc liên kết các Menu trên thanh công cụ với giao diện người dùng (Renderer). Nó chứa các hàm `open` và `openDebug` để khởi tạo 2 bảng làm việc:
+
+* **Default Panel (Message Manager):** Bảng hiển thị toàn bộ lịch sử các luồng message chạy ngầm trong phần mềm.
+* **Debug Panel (Debug Message):** Bảng dành riêng cho việc debug thông điệp.
+
+### 4. Cung cấp chức năng gửi thông điệp giả lập
+Bên cạnh việc giám sát, `browser.ccc` còn đóng vai trò là một cổng cho phép nhà phát triển chủ động phát các xung IPC tùy chỉnh để kiểm thử Extension:
+
+| Phương thức | Chức năng |
+| :--- | :--- |
+| **debug.broadcast** | Phát sự kiện diện rộng không cần phản hồi. |
+| **debug.request** | Gửi yêu cầu bắt buộc và đợi kết quả (Promise). |
+| **debug.send** | Gửi thông điệp đơn thuần đến một extension cụ thể. |
+| **debug.reply** | Trả lời một thông điệp cụ thể. |
+
+---
+
+> **Tóm tắt:** > Tệp `browser.ccc` chính là "bộ não" của công cụ **Message Manager (Developer Tools)** trong Cocos Creator. Nó chạy dưới dạng tiến trình nền nhằm giám sát, thu thập lịch sử kết nối giữa các module và hiển thị lên UI để hỗ trợ việc sửa lỗi extension.
+
+# Phân tích chức năng file `builtin\messages\dist\browser.ccc`
+
+Dựa vào cấu trúc của extension **messages** (được định nghĩa trong `package.json`) và kiến trúc chung của phần mềm **Cocos Creator**, file `browser.ccc` có các chức năng hoạt động chính sau đây:
+
+---
+
+### 1. Điểm neo chính (Main Entry) tại Main Process
+* **Bản chất file:** Đuôi `.ccc` thực chất là mã nguồn JavaScript (`browser.js`) đã được Cocos biên dịch thành dạng **bytecode** (sử dụng *bytenode V8*) nhằm tối ưu tốc độ nạp và mã hóa bảo mật lõi phần mềm.
+* **Vai trò:** Hoạt động dưới dạng **tiến trình chính (Main Process / Backend)** trên nền tảng Electron/Node.js. Nó quản lý toàn bộ vòng đời của công cụ tích hợp sẵn mang tên **Message Manager** (Trình quản lý giao tiếp thông điệp) của Editor.
+
+### 2. Bắt, Ghi chép và Quản lý Giao tiếp (IPC Monitoring)
+Trình Editor của Cocos Creator sử dụng hệ thống **IPC (Inter-Process Communication)** để các extension tương tác với nhau thông qua `Editor.Message`. File `browser.ccc` đóng vai trò "giám sát" hệ thống này:
+
+* **Ghi chép log:** Xử lý các lệnh `start-record` (Bắt đầu ghi hệ thống IPC) và `stop-record` (Dừng ghi) bằng cách gắn các Listener vào lõi phần mềm.
+* **Lưu trữ:** Phụ trách tính năng tự động sao lưu lịch sử thông điệp khi được kích hoạt qua các hook `start-auto-save` và `stop-auto-save`.
+* **Trạng thái:** Sử dụng hàm `queryMessageState` để phản hồi cho giao diện người dùng (UI) biết hệ thống đang ở trạng thái nào và đã ghi nhận bao nhiêu message.
+
+### 3. Quản lý việc Mở Giao diện (Panels)
+Thành phần này kiểm soát việc liên kết các Menu trên thanh công cụ với giao diện người dùng (Renderer). Nó chứa các hàm `open` và `openDebug` để khởi tạo hai cửa sổ làm việc:
+
+* **Default Panel (Message Manager):** Bảng hiển thị toàn bộ lịch sử các luồng message chạy ngầm trong phần mềm.
+* **Debug Panel (Debug Message):** Bảng dành riêng cho việc gỡ lỗi (debug) thông điệp.
+
+### 4. Cung cấp chức năng gửi thông điệp giả lập
+Bên cạnh việc lắng nghe, `browser.ccc` còn là một "cổng" cho phép nhà phát triển chủ động phát các xung IPC tùy chỉnh để kiểm thử Extension thông qua các phương thức:
+
+| Phương thức | Mô tả chức năng |
+| :--- | :--- |
+| `debug.broadcast` | Phát sự kiện diện rộng, không yêu cầu phản hồi. |
+| `debug.request` | Gửi yêu cầu bắt buộc và đợi kết quả trả về (**Promise**). |
+| `debug.send` | Gửi thông điệp đơn thuần đến một extension cụ thể. |
+| `debug.reply` | Phản hồi lại một thông điệp đang chờ. |
+
+---
+
+> **Tóm tắt:** > Tệp `browser.ccc` chính là **bộ não** của công cụ **Message Manager (Developer Tools)** trong Cocos Creator. Nó vận hành như một tiến trình nền để giám sát, thu thập mọi lịch sử giao tiếp giữa các module, đồng thời hiển thị chúng lên UI giúp nhà phát triển dễ dàng chẩn đoán và sửa lỗi extension.
+
+
+# Phân tích Cấu trúc Extension: `browser.ts` vs `index.ts`
+
+Trong kiến trúc của Cocos Creator Extension, sự phân chia giữa **Lõi (Backend)** và **Vỏ (Frontend)** được thể hiện rõ qua hai tệp tin chủ chốt sau:
+
+--- SUMMARY -------
+
+### 1. browser.ts (browser.ccc) - Tiến trình Hệ thống
+* **Vai trò:** Chạy ẩn phía sau với quyền hạn cao nhất (**Node.js**).
+* **Chức năng chính:** * Quản lý logic luồng dữ liệu toàn cục.
+    * "Nghe lén" và bắt mọi thông điệp IPC (Inter-Process Communication) trong toàn bộ hệ thống Cocos Editor.
+* **Ví dụ:** Khi nhận được tín hiệu yêu cầu ghi chép, tệp này sẽ trực tiếp can thiệp vào hệ thống để lưu trữ dữ liệu.
+
+### 2. index.ts (index.ccc) - Giao diện Người dùng
+* **Vai trò:** Là giao diện thẻ (**Tab UI**) được xây dựng bằng HTML/CSS/TypeScript.
+* **Chức năng chính:** * Chịu trách nhiệm hiển thị các nút thao tác và bảng biểu cho người dùng.
+    * Truyền tải chỉ thị từ người dùng xuống lớp xử lý bên dưới.
+* **Luồng hoạt động:** Khi người dùng click nút **"Record"** trên Panel, `index.ts` sẽ thực thi câu lệnh:
+    ```typescript
+    Editor.Message.send('messages', 'start-record');
+    ```
+    Lệnh này gửi một tín hiệu chạy ngầm lên cho `browser.ts` để kích hoạt việc "bật ghi nhớ IPC".
+
+---
+
+### Bảng so sánh nhanh
+
+| Đặc điểm | browser.ts (The Core) | index.ts (The Shell) |
+| :--- | :--- | :--- |
+| **Môi trường** | Node.js (Main Process) | Renderer Process (UI) |
+| **Quyền hạn** | Cao nhất, can thiệp hệ thống | Giới hạn trong Panel giao diện |
+| **Công nghệ** | Logic xử lý ngầm | HTML, CSS, UI Components |
+| **Mối quan hệ** | Là **Lõi** (Xử lý thực thi) | Là **Vỏ** (Hiển thị & Tương tác) |
+
+> **Ghi chú:** Hiểu nôm na, `index.ts` là người đưa ra mệnh lệnh từ phía người dùng, còn `browser.ts` là người thực sự thực hiện công việc nặng nhọc phía sau hậu trường.
