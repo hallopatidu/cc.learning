@@ -165,6 +165,18 @@ Trong kiến trúc của Cocos Creator Extension, sự phân chia giữa **Lõi 
 
 ---
 
+Với kích thước file chỉ khoảng 1.1 KB (đã được nén mã hóa bytecode), 
+builtin\messages\dist\record-message.ccc
+ bản chất là một Helper Module (file tiện ích). Nó không xử lý cả hệ thống cồng kềnh như browser.ts, cũng không vẽ giao diện UI như index.ts.
+
+Nhiệm vụ duy nhất của nó là Bao đóng dữ liệu (Data Structure / Store). Nó định nghĩa cấu trúc của một dòng log tin nhắn, cung cấp các hàm đẩy/xóa dữ liệu trên RAM, đồng thời phụ trách tính năng Ghi ra tệp 
+.json
+ vào phân vùng ổ cứng (nếu tính năng Auto-save đang bật).
+
+Dưới đây là mã nguồn TypeScript quy chuẩn được tái tạo lại dựa trên chức năng của 
+record-message.ccc
+:
+
 ### Bảng so sánh nhanh
 
 | Đặc điểm | browser.ts (The Core) | index.ts (The Shell) |
@@ -175,3 +187,9 @@ Trong kiến trúc của Cocos Creator Extension, sự phân chia giữa **Lõi 
 | **Mối quan hệ** | Là **Lõi** (Xử lý thực thi) | Là **Vỏ** (Hiển thị & Tương tác) |
 
 > **Ghi chú:** Hiểu nôm na, `index.ts` là người đưa ra mệnh lệnh từ phía người dùng, còn `browser.ts` là người thực sự thực hiện công việc nặng nhọc phía sau hậu trường.
+
+
+### Mối liên kết 3 file trong Extension "Messages" của Cocos:
+**record-message.ts**: Đóng vai trò là Cơ Sở Dữ Liệu (Database / Store) lưu mọi thông tin dạng mảng (Array).
+**browser.ts**: Đóng vai trò trung gian Xử lý Luồng (Controller) bắt (hook) các sự kiện trên Cocos Editor, và cứ mỗi lần bắt được một sự kiện, nó sẽ gọi hàm recordMessageStore.addMessageLog(...) để báo cho file số 1 lưu lại.
+**panel/default/index.ts**: Đóng vai trò Giao Diện (Views/UI), nó sẽ gửi lệnh truy vấn lên file số 2. File 2 móc qua lấy chuỗi Array từ file 1, tống xuống lại giao diện và file số 3 sẽ vẽ (render) ra màn hình.
